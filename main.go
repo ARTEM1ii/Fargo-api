@@ -4,9 +4,8 @@ import (
 	"log"
 	"fargo-api/database"
 	"fargo-api/routes"
-
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"go mod tidy
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -15,7 +14,7 @@ func main() {
 	e := echo.New()
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"}, // Можно указать конкретные домены
+		AllowOrigins: []string{"*"},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowHeaders: []string{"Authorization", "Content-Type"},
 	}))
