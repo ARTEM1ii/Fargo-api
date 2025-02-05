@@ -10,6 +10,7 @@ import (
 	"strings"
 	"github.com/xuri/excelize/v2"
 	"github.com/labstack/echo/v4"
+	"time"
 )
 
 const telegramBotToken = "7430261806:AAGKpzpzdSLg1wG6CBgYuJmH_eE4xD3HWpU"
@@ -26,7 +27,16 @@ func CreateTrackcode(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "Client not found"})
 	}
 
-	database.DB.Create(track)
+	if track.TrackCode == "" {
+		track.TrackCode = "TRK-" + strconv.Itoa(int(client.ID)) + "-" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
+
+	result := database.DB.Create(track)
+	if result.Error != nil {
+		fmt.Println("Ошибка при создании трек-кода:", result.Error)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create track code"})
+	}
+
 	return c.JSON(http.StatusCreated, track)
 }
 
@@ -121,8 +131,16 @@ func ExportTrackCodesToExcel(c echo.Context) error {
 	var tracks []models.TrackCode
 	result := database.DB.Find(&tracks)
 	if result.Error != nil {
+		fmt.Println("Ошибка при получении трек-кодов:", result.Error)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch track codes"})
 	}
+
+	if len(tracks) == 0 {
+		fmt.Println("Трек-коды отсутствуют!")
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "No track codes found"})
+	}
+
+	fmt.Println("Количество трек-кодов для экспорта:", len(tracks))
 
 	file := excelize.NewFile()
 	sheetName := "Track Codes"
@@ -135,7 +153,7 @@ func ExportTrackCodesToExcel(c echo.Context) error {
 	}
 
 	for i, track := range tracks {
-		row := strconv.Itoa(i + 2) 
+		row := strconv.Itoa(i + 2)
 		file.SetCellValue(sheetName, "A"+row, track.ID)
 		file.SetCellValue(sheetName, "B"+row, track.ClientID)
 		file.SetCellValue(sheetName, "C"+row, track.TrackCode)
@@ -143,9 +161,18 @@ func ExportTrackCodesToExcel(c echo.Context) error {
 		file.SetCellValue(sheetName, "E"+row, track.CreatedAt.Format("2006-01-02 15:04:05"))
 	}
 
+	fmt.Println("Файл Excel успешно создан!")
+
 	c.Response().Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Response().Header().Set("Content-Disposition", "attachment; filename=track_codes.xlsx")
-	return file.Write(c.Response().Writer)
+
+	err := file.Write(c.Response().Writer)
+	if err != nil {
+		fmt.Println("Ошибка при записи файла:", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate Excel file"})
+	}
+
+	return nil
 }
 
 func extractTelegramID(fullName string) string {
