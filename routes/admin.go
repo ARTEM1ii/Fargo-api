@@ -25,4 +25,5 @@ func TrackCodeRoutes(e *echo.Echo) {
 	e.GET("/track_codes", controllers.GetTrackCodes, middleware.JWTMiddleware)
 	e.PATCH("/track_codes/:id", controllers.UpdateTrackCodeStatus, middleware.JWTMiddleware)
 	e.DELETE("/track_codes/:id", controllers.DeleteTrackCode, middleware.JWTMiddleware)
+	e.GET("/track_codes/export", controllers.ExportTrackCodesToExcel, middleware.JWTMiddleware)
 }
