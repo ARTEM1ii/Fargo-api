@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const telegramBotToken = "7430261806:AAGKpzpzdSLg1wG6CBgYuJmH_eE4xD3HWpU"
+const telegramBotToken = "null"
 
 func CreateTrackcode(c echo.Context) error {
 	track := new(models.TrackCode)
